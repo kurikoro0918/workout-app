@@ -4,64 +4,77 @@ namespace App\Http\Controllers;
 
 use App\Models\Workout;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class WorkoutController extends Controller
 {
-    // 筋トレ記録の一覧を表示（Read）
+    // ログインユーザーの筋トレ記録一覧を表示
     public function index()
     {
-        $workouts = Workout::all();
+        $workouts = Auth::user()->workouts()->orderBy('created_at', 'desc')->get();
         return view('workouts.index', compact('workouts'));
     }
 
-    // 新規作成フォームを表示（Create）
+    // 新規作成フォームを表示
     public function create()
     {
         return view('workouts.create');
     }
 
-    // 新しい記録を保存（Create）
+    // 新しい記録を保存
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'exercise_name' => 'required|max:255',
             'weight' => 'nullable|integer',
             'reps' => 'nullable|integer',
             'sets' => 'nullable|integer',
+            'notes' => 'nullable|string',
         ]);
 
-        Workout::create($request->all());
+        Auth::user()->workouts()->create($validated);
 
         return redirect()->route('workouts.index')->with('success', '記録が追加されました！');
     }
 
-    // 編集フォームを表示（Update）
-    public function edit($id)
+    // 編集フォームを表示
+    public function edit(Workout $workout)
     {
-        $workout = Workout::findOrFail($id);
+        // 他のユーザーの記録を編集できないようチェック
+        if ($workout->user_id !== Auth::id()) {
+            return redirect()->route('workouts.index')->with('error', 'この記録は編集できません。');
+        }
+
         return view('workouts.edit', compact('workout'));
     }
 
-    // 記録を更新（Update）
-    public function update(Request $request, $id)
+    // 記録を更新
+    public function update(Request $request, Workout $workout)
     {
-        $request->validate([
+        if ($workout->user_id !== Auth::id()) {
+            return redirect()->route('workouts.index')->with('error', 'この記録は更新できません。');
+        }
+
+        $validated = $request->validate([
             'exercise_name' => 'required|max:255',
             'weight' => 'nullable|integer',
             'reps' => 'nullable|integer',
             'sets' => 'nullable|integer',
+            'notes' => 'nullable|string',
         ]);
 
-        $workout = Workout::findOrFail($id);
-        $workout->update($request->all());
+        $workout->update($validated);
 
         return redirect()->route('workouts.index')->with('success', '記録が更新されました！');
     }
 
-    // 記録を削除（Delete）
-    public function destroy($id)
+    // 記録を削除
+    public function destroy(Workout $workout)
     {
-        $workout = Workout::findOrFail($id);
+        if ($workout->user_id !== Auth::id()) {
+            return redirect()->route('workouts.index')->with('error', 'この記録は削除できません。');
+        }
+
         $workout->delete();
 
         return redirect()->route('workouts.index')->with('success', '記録が削除されました。');
