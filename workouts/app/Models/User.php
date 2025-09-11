@@ -48,4 +48,10 @@ class User extends Authenticatable
     {
         return $this->hasMany(Workout::class);
     }
+    // likesとのリレーションを追加
+    public function likes(): HasMany
+    {
+        return $this->hasMany(Like::class);
+    }
+
 }
