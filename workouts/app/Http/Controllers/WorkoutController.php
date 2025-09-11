@@ -79,4 +79,22 @@ class WorkoutController extends Controller
 
         return redirect()->route('workouts.index')->with('success', '記録が削除されました。');
     }
+    public function like(Workout $workout)
+    {
+        // ユーザーがまだいいねしていない場合のみ
+        if (!$workout->likedByMe) {
+            $workout->likes()->create(['user_id' => Auth::id()]);
+        }
+        return back();
+    }
+
+    // いいねを削除
+    public function unlike(Workout $workout)
+    {
+        // ユーザーがすでいいねしている場合のみ
+        if ($workout->likedByMe) {
+            $workout->likes()->where('user_id', Auth::id())->delete();
+        }
+        return back();
+    }
 }

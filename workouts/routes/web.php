@@ -20,6 +20,8 @@ Route::middleware(['auth'])->group(function () {
     // プロフィール編集機能
     Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::post('/workouts/{workout}/like', [WorkoutController::class, 'like'])->name('workouts.like');
+    Route::delete('/workouts/{workout}/unlike', [WorkoutController::class, 'unlike'])->name('workouts.unlike');
 });
 
 // 全ユーザーのタイムライン
@@ -30,3 +32,4 @@ Route::get('/profiles/{user}', [ProfileController::class, 'show'])->name('profil
 
 // ホームにアクセスした際のリダイレクト
 Route::redirect('/home', '/my-workouts');
+
